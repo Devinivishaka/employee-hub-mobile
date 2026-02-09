@@ -22,6 +22,7 @@ data class EmployeeFormState(
     val firstNameError: String? = null,
     val lastNameError: String? = null,
     val emailError: String? = null,
+    val phoneError: String? = null,
     val salaryError: String? = null,
 )
 
@@ -73,6 +74,7 @@ class EmployeeEditViewModel(
             firstNameError = null,
             lastNameError = null,
             emailError = null,
+            phoneError = null,
             salaryError = null,
         )
     }
@@ -80,25 +82,35 @@ class EmployeeEditViewModel(
     private fun validate(): Boolean {
         var valid = true
         val current = _form.value
+        val firstName = current.firstName.trim()
+        val lastName = current.lastName.trim()
+        val email = current.email.trim()
+        val phone = current.phone.trim()
+        val salaryText = current.salary.trim()
         var firstNameError: String? = null
         var lastNameError: String? = null
         var emailError: String? = null
+        var phoneError: String? = null
         var salaryError: String? = null
 
-        if (current.firstName.isBlank()) {
+        if (firstName.isBlank()) {
             firstNameError = "First name is required"
             valid = false
         }
-        if (current.lastName.isBlank()) {
+        if (lastName.isBlank()) {
             lastNameError = "Last name is required"
             valid = false
         }
-        if (current.email.isNotBlank() && !android.util.Patterns.EMAIL_ADDRESS.matcher(current.email).matches()) {
+        if (email.isNotBlank() && !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             emailError = "Invalid email"
             valid = false
         }
-        val salaryValue = current.salary.toDoubleOrNull()
-        if (current.salary.isBlank() || salaryValue == null || salaryValue < 0.0) {
+        if (phone.isNotBlank() && !android.util.Patterns.PHONE.matcher(phone).matches()) {
+            phoneError = "Invalid phone"
+            valid = false
+        }
+        val salaryValue = salaryText.toDoubleOrNull()
+        if (salaryText.isBlank() || salaryValue == null || salaryValue < 0.0) {
             salaryError = "Salary must be a non-negative number"
             valid = false
         }
@@ -107,6 +119,7 @@ class EmployeeEditViewModel(
             firstNameError = firstNameError,
             lastNameError = lastNameError,
             emailError = emailError,
+            phoneError = phoneError,
             salaryError = salaryError
         )
 
@@ -118,15 +131,20 @@ class EmployeeEditViewModel(
         viewModelScope.launch {
             _isSaving.value = true
             val current = _form.value
+            val email = current.email.trim()
+            val phone = current.phone.trim()
+            val address = current.address.trim()
+            val designation = current.designation.trim()
+            val salaryText = current.salary.trim()
             val employee = Employee(
                 id = existingId ?: 0,
                 firstName = current.firstName.trim(),
                 lastName = current.lastName.trim(),
-                email = current.email.takeIf { it.isNotBlank() },
-                phone = current.phone.takeIf { it.isNotBlank() },
-                address = current.address.takeIf { it.isNotBlank() },
-                designation = current.designation.takeIf { it.isNotBlank() },
-                salary = current.salary.toDoubleOrNull() ?: 0.0
+                email = email.takeIf { it.isNotEmpty() },
+                phone = phone.takeIf { it.isNotEmpty() },
+                address = address.takeIf { it.isNotEmpty() },
+                designation = designation.takeIf { it.isNotEmpty() },
+                salary = salaryText.toDoubleOrNull() ?: 0.0
             )
             if (existingId == null || existingId == 0L) {
                 repository.insert(employee)

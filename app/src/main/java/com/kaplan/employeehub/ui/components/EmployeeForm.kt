@@ -1,8 +1,6 @@
 package com.kaplan.employeehub.ui.components
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -12,8 +10,15 @@ import androidx.compose.ui.unit.dp
 import com.kaplan.employeehub.ui.viewmodel.EmployeeFormState
 
 @Composable
-fun EmployeeForm(state: EmployeeFormState, onChange: (EmployeeFormState) -> Unit, onSave: () -> Unit, onCancel: () -> Unit, isSaving: Boolean) {
-    Column(modifier = Modifier.padding(16.dp)) {
+fun EmployeeForm(
+    state: EmployeeFormState,
+    onChange: (EmployeeFormState) -> Unit,
+    onSave: () -> Unit,
+    onCancel: () -> Unit,
+    isSaving: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier.padding(16.dp)) {
         OutlinedTextField(
             value = state.firstName,
             onValueChange = { onChange(state.copy(firstName = it)) },
@@ -45,8 +50,10 @@ fun EmployeeForm(state: EmployeeFormState, onChange: (EmployeeFormState) -> Unit
             value = state.phone,
             onValueChange = { onChange(state.copy(phone = it)) },
             label = { Text("Phone") },
+            isError = state.phoneError != null,
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
         )
+        state.phoneError?.let { Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error) }
 
         OutlinedTextField(
             value = state.address,
@@ -71,11 +78,24 @@ fun EmployeeForm(state: EmployeeFormState, onChange: (EmployeeFormState) -> Unit
         )
         state.salaryError?.let { Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error) }
 
-        Button(onClick = onSave, modifier = Modifier.padding(top = 16.dp)) {
-            Text(text = if (isSaving) "Saving..." else "Save")
-        }
-        Button(onClick = onCancel, modifier = Modifier.padding(top = 8.dp)) {
-            Text(text = "Cancel")
+        Row(
+            modifier = Modifier
+                .padding(top = 16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Button(
+                onClick = onSave,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(text = if (isSaving) "Saving..." else "Save")
+            }
+            Button(
+                onClick = onCancel,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(text = "Cancel")
+            }
         }
     }
 }
