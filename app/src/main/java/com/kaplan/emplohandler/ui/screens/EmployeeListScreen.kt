@@ -16,17 +16,26 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,8 +50,53 @@ import com.kaplan.emplohandler.data.Employee
 fun EmployeeListScreen(
     employees: List<Employee>,
     onAddClick: () -> Unit,
-    onEmployeeClick: (Employee) -> Unit
+    onEmployeeClick: (Employee) -> Unit,
+    onDelete: (Employee) -> Unit
 ) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var employeeToDelete by remember { mutableStateOf<Employee?>(null) }
+
+    // Delete confirmation dialog
+    if (showDeleteDialog && employeeToDelete != null) {
+        AlertDialog(
+            onDismissRequest = {
+                showDeleteDialog = false
+                employeeToDelete = null
+            },
+            title = { Text("Delete Employee") },
+            text = {
+                Text("Are you sure you want to delete ${employeeToDelete?.firstName} ${employeeToDelete?.lastName}?")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        employeeToDelete?.let { onDelete(it) }
+                        showDeleteDialog = false
+                        employeeToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Yes", color = MaterialTheme.colorScheme.onError)
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        showDeleteDialog = false
+                        employeeToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.outlineVariant
+                    )
+                ) {
+                    Text("No", color = MaterialTheme.colorScheme.onSurface)
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -93,7 +147,11 @@ fun EmployeeListScreen(
                 items(employees) { employee ->
                     EmployeeListItem(
                         employee = employee,
-                        onClick = { onEmployeeClick(employee) }
+                        onClick = { onEmployeeClick(employee) },
+                        onDeleteClick = {
+                            employeeToDelete = employee
+                            showDeleteDialog = true
+                        }
                     )
                 }
             }
@@ -104,7 +162,8 @@ fun EmployeeListScreen(
 @Composable
 fun EmployeeListItem(
     employee: Employee,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -160,6 +219,16 @@ fun EmployeeListItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            IconButton(
+                onClick = { onDeleteClick() }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete Employee",
+                    tint = MaterialTheme.colorScheme.error
                 )
             }
         }

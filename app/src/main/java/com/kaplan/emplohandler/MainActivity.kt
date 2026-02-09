@@ -60,6 +60,9 @@ fun AppNavigation(viewModel: EmployeeViewModel) {
                 onEmployeeClick = { employee ->
                     viewModel.setSelectedEmployee(employee)
                     navController.navigate("employee_detail/${employee.id}")
+                },
+                onDelete = { employee ->
+                    viewModel.deleteEmployee(employee)
                 }
             )
         }
