@@ -11,7 +11,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+/**
+ * EmployeeViewModel - Manages employee data and operations
+ *
+ * Responsibilities:
+ * - Orchestrate CRUD operations via repository
+ * - Manage UI state (loading, messages)
+ * - Handle errors with user-friendly messages
+ * - Maintain employee selection state
+ */
 class EmployeeViewModel(private val repository: EmployeeRepository) : ViewModel() {
+
+    // StateFlow: All employees from database, updated in real-time
     val allEmployees: StateFlow<List<Employee>> = repository.allEmployees
         .stateIn(
             scope = viewModelScope,
@@ -19,27 +30,46 @@ class EmployeeViewModel(private val repository: EmployeeRepository) : ViewModel(
             initialValue = emptyList()
         )
 
+    // ...existing code...
+
+    // StateFlow: Currently selected employee for detail view
     private val _selectedEmployee = MutableStateFlow<Employee?>(null)
     val selectedEmployee: StateFlow<Employee?> = _selectedEmployee
 
+    // StateFlow: UI message for snackbar display (success/error)
     private val _uiMessage = MutableStateFlow<String?>(null)
     val uiMessage: StateFlow<String?> = _uiMessage
 
+    // StateFlow: Loading indicator for ongoing operations
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
+    /**
+     * Set the currently selected employee
+     * Used when navigating to employee detail screen
+     */
     fun setSelectedEmployee(employee: Employee?) {
         _selectedEmployee.value = employee
     }
 
+    /**
+     * Clear UI message (typically called after snackbar is shown)
+     */
     fun clearMessage() {
         _uiMessage.value = null
     }
 
+    /**
+     * Post a message to be displayed in snackbar
+     */
     fun postMessage(message: String) {
         _uiMessage.value = message
     }
 
+    /**
+     * Add new employee to database
+     * Handles validation errors and database constraint errors
+     */
     fun addEmployee(employee: Employee) {
         viewModelScope.launch {
             try {
@@ -47,8 +77,10 @@ class EmployeeViewModel(private val repository: EmployeeRepository) : ViewModel(
                 repository.insertEmployee(employee)
                 _uiMessage.value = "Employee added successfully!"
             } catch (e: IllegalArgumentException) {
+                // Validation error from repository
                 _uiMessage.value = "Invalid employee data. Please check all fields."
             } catch (e: Exception) {
+                // Any other error (database, IO, etc.)
                 _uiMessage.value = "Failed to add employee. Please try again."
             } finally {
                 _isLoading.value = false
@@ -56,6 +88,10 @@ class EmployeeViewModel(private val repository: EmployeeRepository) : ViewModel(
         }
     }
 
+    /**
+     * Update existing employee in database
+     * Handles validation and update errors
+     */
     fun updateEmployee(employee: Employee) {
         viewModelScope.launch {
             try {
@@ -72,6 +108,10 @@ class EmployeeViewModel(private val repository: EmployeeRepository) : ViewModel(
         }
     }
 
+    /**
+     * Delete employee from database
+     * Handles delete operation errors
+     */
     fun deleteEmployee(employee: Employee) {
         viewModelScope.launch {
             try {
@@ -86,6 +126,10 @@ class EmployeeViewModel(private val repository: EmployeeRepository) : ViewModel(
         }
     }
 
+    /**
+     * Delete employee by ID
+     * Used when deleting from detail or list view
+     */
     fun deleteEmployeeById(id: Int) {
         viewModelScope.launch {
             try {
@@ -100,6 +144,10 @@ class EmployeeViewModel(private val repository: EmployeeRepository) : ViewModel(
         }
     }
 
+    /**
+     * Load employee by ID from database
+     * Used when navigating to detail view with employee ID
+     */
     fun loadEmployeeById(id: Int) {
         viewModelScope.launch {
             try {
@@ -118,6 +166,11 @@ class EmployeeViewModel(private val repository: EmployeeRepository) : ViewModel(
         }
     }
 }
+
+/**
+ * Factory for creating EmployeeViewModel instances with repository
+ * Required by ViewModelProvider to pass dependencies
+ */
 
 class EmployeeViewModelFactory(private val repository: EmployeeRepository) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {

@@ -23,6 +23,15 @@ import com.kaplan.emplohandler.ui.theme.EmploHandlerTheme
 import com.kaplan.emplohandler.viewmodel.EmployeeViewModel
 import com.kaplan.emplohandler.viewmodel.EmployeeViewModelFactory
 
+/**
+ * MainActivity - Main entry point of the application
+ *
+ * Responsibilities:
+ * - Initialize database and dependency injection
+ * - Create and provide ViewModel instance
+ * - Setup Compose UI with theme
+ * - Host navigation controller
+ */
 class MainActivity : ComponentActivity() {
     private lateinit var viewModel: EmployeeViewModel
 
@@ -30,12 +39,19 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Initialize database and repository
+        // 1. Initialize database using singleton pattern
         val database = EmployeeDatabase.getDatabase(this)
+
+        // 2. Create repository with DAO (data access layer)
         val repository = EmployeeRepository(database.employeeDao())
+
+        // 3. Create factory for ViewModel dependency injection
         val factory = EmployeeViewModelFactory(repository)
+
+        // 4. Get or create ViewModel from factory
         viewModel = ViewModelProvider(this, factory).get(EmployeeViewModel::class.java)
 
+        // 5. Set Compose content with theme
         setContent {
             EmploHandlerTheme {
                 AppNavigation(viewModel)
@@ -44,49 +60,76 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/**
+ * AppNavigation - Main navigation graph
+ *
+ * Manages:
+ * - Navigation between screens (list, add, detail)
+ * - Shared snackbar for error/success messages
+ * - Automatic error message display
+ * - Employee data flow between screens
+ *
+ * Navigation Routes:
+ * - employee_list: Main employee list screen
+ * - add_employee: Add new employee screen
+ * - employee_detail/{employeeId}: View/edit employee details
+ */
 @Composable
 fun AppNavigation(viewModel: EmployeeViewModel) {
+    // Navigation controller for managing screen transitions
     val navController = rememberNavController()
+
+    // Shared snackbar state for displaying messages across all screens
     val snackbarHostState = remember { SnackbarHostState() }
+
+    // Observe UI message state from ViewModel
     val uiMessage by viewModel.uiMessage.collectAsState()
 
-    // Show snackbar when message updates
+    // Show snackbar when message updates (success/error from operations)
     LaunchedEffect(uiMessage) {
         uiMessage?.let { message ->
             snackbarHostState.showSnackbar(message)
-            viewModel.clearMessage()
+            viewModel.clearMessage()  // Clear after displaying
         }
     }
 
+    // Navigation host with composable routes
     NavHost(
         navController = navController,
         startDestination = "employee_list"
     ) {
+        // ROUTE 1: Employee List Screen (main/home screen)
         composable("employee_list") {
             val employees by viewModel.allEmployees.collectAsState()
 
             EmployeeListScreen(
                 employees = employees,
                 snackbarHostState = snackbarHostState,
+                // Navigate to add employee screen
                 onAddClick = {
                     navController.navigate("add_employee")
                 },
+                // Navigate to detail screen with employee ID
                 onEmployeeClick = { employee ->
                     viewModel.setSelectedEmployee(employee)
                     navController.navigate("employee_detail/${employee.id}")
                 },
+                // Delete employee (triggers snackbar message)
                 onDelete = { employee ->
                     viewModel.deleteEmployee(employee)
                 }
             )
         }
 
+        // ROUTE 2: Add Employee Screen (new employee form)
         composable("add_employee") {
             AddEmployeeScreen(
                 snackbarHostState = snackbarHostState,
+                // Go back to list
                 onBack = {
                     navController.navigateUp()
                 },
+                // Save new employee and return to list
                 onSave = { employee ->
                     viewModel.addEmployee(employee)
                     // Navigate back after a short delay to allow message to show
@@ -95,28 +138,36 @@ fun AppNavigation(viewModel: EmployeeViewModel) {
             )
         }
 
+        // ROUTE 3: Employee Detail Screen (view/edit existing employee)
         composable("employee_detail/{employeeId}") { backStackEntry ->
+            // Extract employee ID from route parameter
             val employeeId = backStackEntry.arguments?.getString("employeeId")?.toIntOrNull()
+
+            // Observe selected employee from ViewModel
             val selectedEmployee by viewModel.selectedEmployee.collectAsState()
 
-            // Load employee if not already loaded
+            // Load employee when screen opens (if not already loaded)
             LaunchedEffect(employeeId) {
                 if (employeeId != null && (selectedEmployee == null || selectedEmployee?.id != employeeId)) {
                     viewModel.loadEmployeeById(employeeId)
                 }
             }
 
+            // Only show detail screen if employee is loaded and ID matches
             if (employeeId != null && selectedEmployee != null && selectedEmployee?.id == employeeId) {
                 EmployeeDetailScreen(
                     employee = selectedEmployee!!,
                     snackbarHostState = snackbarHostState,
+                    // Go back to list
                     onBack = {
                         navController.navigateUp()
                     },
+                    // Update employee and return to list
                     onUpdate = { updatedEmployee ->
                         viewModel.updateEmployee(updatedEmployee)
                         navController.popBackStack("employee_list", inclusive = false)
                     },
+                    // Delete employee and return to list
                     onDelete = { employee ->
                         viewModel.deleteEmployee(employee)
                         navController.popBackStack("employee_list", inclusive = false)

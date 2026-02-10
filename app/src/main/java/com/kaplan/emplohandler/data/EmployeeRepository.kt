@@ -2,9 +2,26 @@ package com.kaplan.emplohandler.data
 
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * EmployeeRepository - Data access layer for employee operations
+ *
+ * Responsibilities:
+ * - Provide data access abstraction (DAO layer)
+ * - Validate employee data before database operations
+ * - Map database exceptions to meaningful error messages
+ * - Enforce business rules and constraints
+ */
 class EmployeeRepository(private val employeeDao: EmployeeDao) {
+
+    // StateFlow from DAO: All employees from database, ordered by first name
     val allEmployees: Flow<List<Employee>> = employeeDao.getAllEmployees()
 
+    /**
+     * Get single employee by ID
+     * @param id Employee ID to retrieve
+     * @return Employee if found, null otherwise
+     * @throws IllegalArgumentException if ID is invalid (≤ 0)
+     */
     suspend fun getEmployeeById(id: Int): Employee? {
         if (id <= 0) {
             throw IllegalArgumentException("Employee ID must be greater than 0")
@@ -16,17 +33,30 @@ class EmployeeRepository(private val employeeDao: EmployeeDao) {
         }
     }
 
+    /**
+     * Insert new employee into database
+     * @param employee Employee object to insert
+     * @return Row ID of inserted employee
+     * @throws IllegalArgumentException if employee data is invalid
+     * @throws Exception if duplicate email or database error
+     */
     suspend fun insertEmployee(employee: Employee): Long {
         validateEmployee(employee)
         return try {
             employeeDao.insertEmployee(employee)
         } catch (e: android.database.sqlite.SQLiteConstraintException) {
+            // Email is unique constraint - handle duplicate
             throw Exception("Employee with this email already exists")
         } catch (e: Exception) {
             throw Exception("Failed to insert employee: ${e.message}")
         }
     }
 
+    /**
+     * Update existing employee in database
+     * @param employee Employee object with updated data
+     * @throws IllegalArgumentException if employee data is invalid or ID is invalid
+     */
     suspend fun updateEmployee(employee: Employee) {
         validateEmployee(employee)
         if (employee.id <= 0) {
@@ -39,6 +69,11 @@ class EmployeeRepository(private val employeeDao: EmployeeDao) {
         }
     }
 
+    /**
+     * Delete employee from database
+     * @param employee Employee object to delete
+     * @throws IllegalArgumentException if employee ID is invalid
+     */
     suspend fun deleteEmployee(employee: Employee) {
         if (employee.id <= 0) {
             throw IllegalArgumentException("Invalid employee ID")
@@ -50,6 +85,11 @@ class EmployeeRepository(private val employeeDao: EmployeeDao) {
         }
     }
 
+    /**
+     * Delete employee by ID from database
+     * @param id Employee ID to delete
+     * @throws IllegalArgumentException if ID is invalid (≤ 0)
+     */
     suspend fun deleteEmployeeById(id: Int) {
         if (id <= 0) {
             throw IllegalArgumentException("Employee ID must be greater than 0")
@@ -61,8 +101,14 @@ class EmployeeRepository(private val employeeDao: EmployeeDao) {
         }
     }
 
+    /**
+     * Validate employee data before database operations
+     * Checks: field presence, length limits, value ranges
+     * @param employee Employee to validate
+     * @throws IllegalArgumentException if any validation fails
+     */
     private fun validateEmployee(employee: Employee) {
-        // Validate all required fields
+        // Required field validation
         if (employee.firstName.isBlank()) {
             throw IllegalArgumentException("First name cannot be empty")
         }
@@ -81,11 +127,13 @@ class EmployeeRepository(private val employeeDao: EmployeeDao) {
         if (employee.designation.isBlank()) {
             throw IllegalArgumentException("Designation cannot be empty")
         }
+
+        // Salary range validation
         if (employee.salary < 0) {
             throw IllegalArgumentException("Salary cannot be negative")
         }
 
-        // Validate field lengths
+        // Field length validation (enforce database schema limits)
         if (employee.firstName.length > 50) {
             throw IllegalArgumentException("First name is too long")
         }
