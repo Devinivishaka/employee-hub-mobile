@@ -24,17 +24,30 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.unit.dp
 import com.kaplan.employeehub.ui.components.ErrorDialog
 
+/**
+ * Screen that displays a list of all employees.
+ * Supports adding new employees and editing/deleting existing ones.
+ * Includes error dialog display for user feedback on failures.
+ *
+ * @param viewModel The EmployeeListViewModel managing the screen state
+ * @param onAdd Callback when user clicks the Add Employee button
+ * @param onEdit Callback when user clicks an employee to edit (receives employeeId)
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmployeeListScreen(viewModel: EmployeeListViewModel, onAdd: () -> Unit, onEdit: (Long) -> Unit) {
+    // Collect state from ViewModel
     val employees = viewModel.employees.collectAsState()
     val errorMessage = viewModel.errorMessage.collectAsState()
     val isDeleting = viewModel.isDeleting.collectAsState()
+
+    // Configure app bar colors
     val appBarColors = TopAppBarDefaults.centerAlignedTopAppBarColors(
         containerColor = MaterialTheme.colorScheme.primary,
         titleContentColor = MaterialTheme.colorScheme.onPrimary
     )
 
+    // Display error dialog if error message exists
     if (errorMessage.value != null) {
         ErrorDialog(
             title = "Error",
@@ -51,6 +64,7 @@ fun EmployeeListScreen(viewModel: EmployeeListViewModel, onAdd: () -> Unit, onEd
             )
         },
         floatingActionButton = {
+            // FAB disabled during deletion to prevent duplicate operations
             FloatingActionButton(
                 onClick = onAdd,
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -67,6 +81,7 @@ fun EmployeeListScreen(viewModel: EmployeeListViewModel, onAdd: () -> Unit, onEd
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
+            // Display each employee as a row
             items(employees.value) { emp ->
                 EmployeeRow(
                     employee = emp,

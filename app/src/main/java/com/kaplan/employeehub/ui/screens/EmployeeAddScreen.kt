@@ -12,14 +12,29 @@ import com.kaplan.employeehub.ui.components.EmployeeForm
 import com.kaplan.employeehub.ui.components.ErrorDialog
 import com.kaplan.employeehub.ui.viewmodel.EmployeeEditViewModel
 
+/**
+ * Screen for adding a new employee to the system.
+ * Provides an empty form for user to fill in employee details.
+ * Displays error dialogs for any operation failures.
+ *
+ * @param viewModel The EmployeeEditViewModel managing the screen state
+ * @param onSaved Callback when new employee is successfully created
+ * @param onCancel Callback when user cancels the operation
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EmployeeAddScreen(viewModel: EmployeeEditViewModel, onSaved: () -> Unit, onCancel: () -> Unit) {
+fun EmployeeAddScreen(
+    viewModel: EmployeeEditViewModel,
+    onSaved: () -> Unit,
+    onCancel: () -> Unit
+) {
+    // Collect relevant state from ViewModel
     val state = viewModel.form.collectAsState()
     val isSaving = viewModel.isSaving.collectAsState()
     val isLoading = viewModel.isLoading.collectAsState()
     val errorMessage = viewModel.errorMessage.collectAsState()
 
+    // Display error dialog if error message exists
     if (errorMessage.value != null) {
         ErrorDialog(
             title = "Error",
@@ -48,8 +63,10 @@ fun EmployeeAddScreen(viewModel: EmployeeEditViewModel, onSaved: () -> Unit, onC
             },
             onSave = { viewModel.save(onComplete = onSaved) },
             onCancel = onCancel,
+            // Show loading text during save or load operations
             isSaving = isSaving.value || isLoading.value,
             modifier = Modifier.padding(padding),
+            // Disable form during load operations
             isEnabled = !isLoading.value && !isSaving.value
         )
     }
