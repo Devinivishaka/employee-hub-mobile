@@ -39,6 +39,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kaplan.emplohandler.data.Employee
 import com.kaplan.emplohandler.ui.utils.validateEmployeeInput
+import com.kaplan.emplohandler.util.ErrorHandler
+import com.kaplan.emplohandler.util.ValidationResult
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -276,22 +278,40 @@ fun EmployeeDetailScreen(
 
                 Button(
                     onClick = {
-                        val validationErrors = validateEmployeeInput(
+                        // Use ErrorHandler for validation
+                        val validationResult = ErrorHandler.validateEmployeeData(
                             firstName, lastName, email, phoneNumber, address, designation, salary
                         )
-                        if (validationErrors.isEmpty()) {
-                            val updatedEmployee = employee.copy(
-                                firstName = firstName,
-                                lastName = lastName,
-                                email = email,
-                                phoneNumber = phoneNumber,
-                                address = address,
-                                designation = designation,
-                                salary = salary.toDouble()
-                            )
-                            onUpdate(updatedEmployee)
-                        } else {
-                            errors = validationErrors
+
+                        when (validationResult) {
+                            is ValidationResult.Success -> {
+                                // Validation passed, create and update employee
+                                val updatedEmployee = employee.copy(
+                                    firstName = firstName,
+                                    lastName = lastName,
+                                    email = email,
+                                    phoneNumber = phoneNumber,
+                                    address = address,
+                                    designation = designation,
+                                    salary = salary.toDouble()
+                                )
+                                onUpdate(updatedEmployee)
+                            }
+                            is ValidationResult.Failure -> {
+                                errors = validationResult.errors.associate { error ->
+                                    val fieldName = when {
+                                        error.contains("First name", ignoreCase = true) -> "firstName"
+                                        error.contains("Last name", ignoreCase = true) -> "lastName"
+                                        error.contains("Email", ignoreCase = true) -> "email"
+                                        error.contains("Phone", ignoreCase = true) -> "phoneNumber"
+                                        error.contains("Address", ignoreCase = true) -> "address"
+                                        error.contains("Designation", ignoreCase = true) -> "designation"
+                                        error.contains("Salary", ignoreCase = true) -> "salary"
+                                        else -> "general"
+                                    }
+                                    fieldName to error
+                                }
+                            }
                         }
                     },
                     modifier = Modifier

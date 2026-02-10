@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.kaplan.emplohandler.data.Employee
 import com.kaplan.emplohandler.data.EmployeeRepository
+import com.kaplan.emplohandler.util.ErrorHandler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -67,21 +68,17 @@ class EmployeeViewModel(private val repository: EmployeeRepository) : ViewModel(
     }
 
     /**
-     * Add new employee to database
-     * Handles validation errors and database constraint errors
+     * Add new employee to database with error handling
+     * Shows user-friendly error messages from ErrorHandler
      */
     fun addEmployee(employee: Employee) {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
                 repository.insertEmployee(employee)
-                _uiMessage.value = "Employee added successfully!"
-            } catch (e: IllegalArgumentException) {
-                // Validation error from repository
-                _uiMessage.value = "Invalid employee data. Please check all fields."
+                _uiMessage.value = ErrorHandler.getOperationMessage(true, "add")
             } catch (e: Exception) {
-                // Any other error (database, IO, etc.)
-                _uiMessage.value = "Failed to add employee. Please try again."
+                _uiMessage.value = ErrorHandler.getErrorMessage(e, "add employee")
             } finally {
                 _isLoading.value = false
             }
@@ -89,19 +86,17 @@ class EmployeeViewModel(private val repository: EmployeeRepository) : ViewModel(
     }
 
     /**
-     * Update existing employee in database
-     * Handles validation and update errors
+     * Update existing employee with error handling
+     * Shows user-friendly error messages from ErrorHandler
      */
     fun updateEmployee(employee: Employee) {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
                 repository.updateEmployee(employee)
-                _uiMessage.value = "Employee updated successfully!"
-            } catch (e: IllegalArgumentException) {
-                _uiMessage.value = "Invalid employee data. Please check all fields."
+                _uiMessage.value = ErrorHandler.getOperationMessage(true, "update")
             } catch (e: Exception) {
-                _uiMessage.value = "Failed to update employee. Please try again."
+                _uiMessage.value = ErrorHandler.getErrorMessage(e, "update employee")
             } finally {
                 _isLoading.value = false
             }
@@ -109,17 +104,17 @@ class EmployeeViewModel(private val repository: EmployeeRepository) : ViewModel(
     }
 
     /**
-     * Delete employee from database
-     * Handles delete operation errors
+     * Delete employee with error handling
+     * Shows user-friendly error messages from ErrorHandler
      */
     fun deleteEmployee(employee: Employee) {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
                 repository.deleteEmployee(employee)
-                _uiMessage.value = "Employee deleted successfully!"
+                _uiMessage.value = ErrorHandler.getOperationMessage(true, "delete")
             } catch (e: Exception) {
-                _uiMessage.value = "Failed to delete employee. Please try again."
+                _uiMessage.value = ErrorHandler.getErrorMessage(e, "delete employee")
             } finally {
                 _isLoading.value = false
             }
@@ -127,17 +122,17 @@ class EmployeeViewModel(private val repository: EmployeeRepository) : ViewModel(
     }
 
     /**
-     * Delete employee by ID
-     * Used when deleting from detail or list view
+     * Delete employee by ID with error handling
+     * Shows user-friendly error messages from ErrorHandler
      */
     fun deleteEmployeeById(id: Int) {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
                 repository.deleteEmployeeById(id)
-                _uiMessage.value = "Employee deleted successfully!"
+                _uiMessage.value = ErrorHandler.getOperationMessage(true, "delete")
             } catch (e: Exception) {
-                _uiMessage.value = "Failed to delete employee. Please try again."
+                _uiMessage.value = ErrorHandler.getErrorMessage(e, "delete employee")
             } finally {
                 _isLoading.value = false
             }
@@ -145,8 +140,8 @@ class EmployeeViewModel(private val repository: EmployeeRepository) : ViewModel(
     }
 
     /**
-     * Load employee by ID from database
-     * Used when navigating to detail view with employee ID
+     * Load employee by ID with error handling
+     * Shows user-friendly error messages from ErrorHandler
      */
     fun loadEmployeeById(id: Int) {
         viewModelScope.launch {
@@ -159,7 +154,7 @@ class EmployeeViewModel(private val repository: EmployeeRepository) : ViewModel(
                     _selectedEmployee.value = employee
                 }
             } catch (e: Exception) {
-                _uiMessage.value = "Failed to load employee details. Please try again."
+                _uiMessage.value = ErrorHandler.getErrorMessage(e, "load employee")
             } finally {
                 _isLoading.value = false
             }
