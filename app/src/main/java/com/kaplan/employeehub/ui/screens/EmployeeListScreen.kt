@@ -23,6 +23,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.unit.dp
 import com.kaplan.employeehub.ui.components.ErrorDialog
+import com.kaplan.employeehub.ui.components.ConfirmationDialog
 
 /**
  * Screen that displays a list of all employees.
@@ -36,10 +37,11 @@ import com.kaplan.employeehub.ui.components.ErrorDialog
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmployeeListScreen(viewModel: EmployeeListViewModel, onAdd: () -> Unit, onEdit: (Long) -> Unit) {
-    // Collect state from ViewModel
+    // Collect state from ViewModel for reactive UI updates
     val employees = viewModel.employees.collectAsState()
     val errorMessage = viewModel.errorMessage.collectAsState()
     val isDeleting = viewModel.isDeleting.collectAsState()
+    val employeePendingDeletion = viewModel.employeePendingDeletion.collectAsState()
 
     // Configure app bar colors
     val appBarColors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -53,6 +55,17 @@ fun EmployeeListScreen(viewModel: EmployeeListViewModel, onAdd: () -> Unit, onEd
             title = "Error",
             message = errorMessage.value ?: "Unknown error",
             onDismiss = { viewModel.clearError() }
+        )
+    }
+
+    // Display confirmation dialog when deletion is initiated
+    val pendingEmployee = employeePendingDeletion.value
+    if (pendingEmployee != null) {
+        ConfirmationDialog(
+            title = "Delete Employee",
+            message = "Are you sure you want to delete ${pendingEmployee.firstName} ${pendingEmployee.lastName}?",
+            onConfirm = { viewModel.confirmDelete() },
+            onCancel = { viewModel.cancelDelete() }
         )
     }
 
@@ -86,7 +99,7 @@ fun EmployeeListScreen(viewModel: EmployeeListViewModel, onAdd: () -> Unit, onEd
                 EmployeeRow(
                     employee = emp,
                     onClick = { onEdit(emp.id) },
-                    onDelete = { toDelete -> viewModel.delete(toDelete) },
+                    onDelete = { toDelete -> viewModel.initiateDelete(toDelete) },
                     isDeleting = isDeleting.value
                 )
             }
