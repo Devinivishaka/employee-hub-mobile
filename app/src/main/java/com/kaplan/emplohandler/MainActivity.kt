@@ -4,9 +4,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -44,6 +47,16 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation(viewModel: EmployeeViewModel) {
     val navController = rememberNavController()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val uiMessage by viewModel.uiMessage.collectAsState()
+
+    // Show snackbar when message updates
+    LaunchedEffect(uiMessage) {
+        uiMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.clearMessage()
+        }
+    }
 
     NavHost(
         navController = navController,
@@ -54,6 +67,7 @@ fun AppNavigation(viewModel: EmployeeViewModel) {
 
             EmployeeListScreen(
                 employees = employees,
+                snackbarHostState = snackbarHostState,
                 onAddClick = {
                     navController.navigate("add_employee")
                 },
@@ -69,23 +83,33 @@ fun AppNavigation(viewModel: EmployeeViewModel) {
 
         composable("add_employee") {
             AddEmployeeScreen(
+                snackbarHostState = snackbarHostState,
                 onBack = {
                     navController.navigateUp()
                 },
                 onSave = { employee ->
                     viewModel.addEmployee(employee)
+                    // Navigate back after a short delay to allow message to show
                     navController.popBackStack("employee_list", inclusive = false)
                 }
             )
         }
 
         composable("employee_detail/{employeeId}") { backStackEntry ->
-            val employeeId = backStackEntry.arguments?.getString("employeeId")?.toIntOrNull() ?: 0
-            val selectedEmployee = viewModel.selectedEmployee
+            val employeeId = backStackEntry.arguments?.getString("employeeId")?.toIntOrNull()
+            val selectedEmployee by viewModel.selectedEmployee.collectAsState()
 
-            if (selectedEmployee != null && selectedEmployee.id == employeeId) {
+            // Load employee if not already loaded
+            LaunchedEffect(employeeId) {
+                if (employeeId != null && (selectedEmployee == null || selectedEmployee?.id != employeeId)) {
+                    viewModel.loadEmployeeById(employeeId)
+                }
+            }
+
+            if (employeeId != null && selectedEmployee != null && selectedEmployee?.id == employeeId) {
                 EmployeeDetailScreen(
-                    employee = selectedEmployee,
+                    employee = selectedEmployee!!,
+                    snackbarHostState = snackbarHostState,
                     onBack = {
                         navController.navigateUp()
                     },

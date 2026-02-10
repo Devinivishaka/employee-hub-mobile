@@ -13,44 +13,62 @@ fun validateEmployeeInput(
 ): Map<String, String> {
     val errors = mutableMapOf<String, String>()
 
-    if (firstName.isBlank()) {
-        errors["firstName"] = "First name is required"
+    // First Name validation
+    when {
+        firstName.isBlank() -> errors["firstName"] = "First name is required"
+        firstName.length > 50 -> errors["firstName"] = "First name must be less than 50 characters"
+        !firstName.all { it.isLetter() || it.isWhitespace() } -> errors["firstName"] = "First name can only contain letters"
     }
 
-    if (lastName.isBlank()) {
-        errors["lastName"] = "Last name is required"
+    // Last Name validation
+    when {
+        lastName.isBlank() -> errors["lastName"] = "Last name is required"
+        lastName.length > 50 -> errors["lastName"] = "Last name must be less than 50 characters"
+        !lastName.all { it.isLetter() || it.isWhitespace() } -> errors["lastName"] = "Last name can only contain letters"
     }
 
-    if (email.isBlank()) {
-        errors["email"] = "Email is required"
-    } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-        errors["email"] = "Invalid email format"
+    // Email validation
+    when {
+        email.isBlank() -> errors["email"] = "Email is required"
+        !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> errors["email"] = "Invalid email format"
+        email.length > 100 -> errors["email"] = "Email must be less than 100 characters"
     }
 
-    if (phoneNumber.isBlank()) {
-        errors["phoneNumber"] = "Phone number is required"
-    } else if (phoneNumber.length < 10) {
-        errors["phoneNumber"] = "Phone number must be at least 10 digits"
+    // Phone Number validation
+    when {
+        phoneNumber.isBlank() -> errors["phoneNumber"] = "Phone number is required"
+        phoneNumber.length < 10 -> errors["phoneNumber"] = "Phone number must be at least 10 digits"
+        phoneNumber.length > 20 -> errors["phoneNumber"] = "Phone number must be less than 20 characters"
+        !phoneNumber.all { it.isDigit() || it == '+' || it == '-' || it == ' ' } ->
+            errors["phoneNumber"] = "Phone number contains invalid characters"
     }
 
-    if (address.isBlank()) {
-        errors["address"] = "Address is required"
+    // Address validation
+    when {
+        address.isBlank() -> errors["address"] = "Address is required"
+        address.length > 200 -> errors["address"] = "Address must be less than 200 characters"
     }
 
-    if (designation.isBlank()) {
-        errors["designation"] = "Designation is required"
+    // Designation validation
+    when {
+        designation.isBlank() -> errors["designation"] = "Designation is required"
+        designation.length > 100 -> errors["designation"] = "Designation must be less than 100 characters"
     }
 
-    if (salary.isBlank()) {
-        errors["salary"] = "Salary is required"
-    } else {
-        try {
-            val salaryValue = salary.toDouble()
-            if (salaryValue < 0) {
-                errors["salary"] = "Salary must be a positive number"
+    // Salary validation
+    when {
+        salary.isBlank() -> errors["salary"] = "Salary is required"
+        salary.length > 15 -> errors["salary"] = "Salary value is too large"
+        else -> {
+            try {
+                val salaryValue = salary.toDouble()
+                when {
+                    salaryValue < 0 -> errors["salary"] = "Salary must be a positive number"
+                    salaryValue > 9999999.99 -> errors["salary"] = "Salary cannot exceed 9,999,999.99"
+                }
+            } catch (e: NumberFormatException) {
+                errors["salary"] = "Salary must be a valid number (e.g., 50000 or 50000.50)"
             }
-        } catch (e: NumberFormatException) {
-            errors["salary"] = "Salary must be a valid number"
         }
     }
 

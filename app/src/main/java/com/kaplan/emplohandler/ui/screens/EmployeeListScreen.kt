@@ -28,6 +28,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -49,6 +51,7 @@ import com.kaplan.emplohandler.data.Employee
 @Composable
 fun EmployeeListScreen(
     employees: List<Employee>,
+    snackbarHostState: SnackbarHostState,
     onAddClick: () -> Unit,
     onEmployeeClick: (Employee) -> Unit,
     onDelete: (Employee) -> Unit
@@ -121,7 +124,8 @@ fun EmployeeListScreen(
             ) {
                 Icon(Icons.Filled.Add, "Add Employee")
             }
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         if (employees.isEmpty()) {
             Box(

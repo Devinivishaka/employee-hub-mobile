@@ -44,6 +44,7 @@ import com.kaplan.emplohandler.ui.utils.validateEmployeeInput
 @Composable
 fun EmployeeDetailScreen(
     employee: Employee,
+    snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
     onUpdate: (Employee) -> Unit,
     onDelete: (Employee) -> Unit
@@ -58,7 +59,6 @@ fun EmployeeDetailScreen(
 
     var errors by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var showDeleteDialog by remember { mutableStateOf(false) }
-    val snackbarHostState = remember { SnackbarHostState() }
 
     if (showDeleteDialog) {
         AlertDialog(

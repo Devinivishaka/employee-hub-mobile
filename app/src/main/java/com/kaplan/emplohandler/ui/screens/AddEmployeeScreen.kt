@@ -43,6 +43,7 @@ import com.kaplan.emplohandler.ui.utils.validateEmployeeInput
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddEmployeeScreen(
+    snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
     onSave: (Employee) -> Unit
 ) {
@@ -55,7 +56,6 @@ fun AddEmployeeScreen(
     var salary by remember { mutableStateOf("") }
 
     var errors by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
-    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
         topBar = {
