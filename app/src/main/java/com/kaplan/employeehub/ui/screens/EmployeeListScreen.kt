@@ -22,15 +22,26 @@ import com.kaplan.employeehub.ui.components.EmployeeRow
 import androidx.compose.runtime.collectAsState
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.unit.dp
+import com.kaplan.employeehub.ui.components.ErrorDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmployeeListScreen(viewModel: EmployeeListViewModel, onAdd: () -> Unit, onEdit: (Long) -> Unit) {
     val employees = viewModel.employees.collectAsState()
+    val errorMessage = viewModel.errorMessage.collectAsState()
+    val isDeleting = viewModel.isDeleting.collectAsState()
     val appBarColors = TopAppBarDefaults.centerAlignedTopAppBarColors(
         containerColor = MaterialTheme.colorScheme.primary,
         titleContentColor = MaterialTheme.colorScheme.onPrimary
     )
+
+    if (errorMessage.value != null) {
+        ErrorDialog(
+            title = "Error",
+            message = errorMessage.value ?: "Unknown error",
+            onDismiss = { viewModel.clearError() }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -60,7 +71,8 @@ fun EmployeeListScreen(viewModel: EmployeeListViewModel, onAdd: () -> Unit, onEd
                 EmployeeRow(
                     employee = emp,
                     onClick = { onEdit(emp.id) },
-                    onDelete = { toDelete -> viewModel.delete(toDelete) }
+                    onDelete = { toDelete -> viewModel.delete(toDelete) },
+                    isDeleting = isDeleting.value
                 )
             }
         }

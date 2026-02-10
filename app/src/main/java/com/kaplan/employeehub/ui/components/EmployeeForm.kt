@@ -16,7 +16,8 @@ fun EmployeeForm(
     onSave: () -> Unit,
     onCancel: () -> Unit,
     isSaving: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isEnabled: Boolean = true
 ) {
     Column(modifier = modifier.padding(16.dp)) {
         OutlinedTextField(
@@ -24,6 +25,7 @@ fun EmployeeForm(
             onValueChange = { onChange(state.copy(firstName = it)) },
             label = { Text("First name*") },
             isError = state.firstNameError != null,
+            enabled = isEnabled,
             modifier = Modifier.fillMaxWidth()
         )
         state.firstNameError?.let { Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error) }
@@ -33,6 +35,7 @@ fun EmployeeForm(
             onValueChange = { onChange(state.copy(lastName = it)) },
             label = { Text("Last name*") },
             isError = state.lastNameError != null,
+            enabled = isEnabled,
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
         )
         state.lastNameError?.let { Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error) }
@@ -42,6 +45,7 @@ fun EmployeeForm(
             onValueChange = { onChange(state.copy(email = it)) },
             label = { Text("Email") },
             isError = state.emailError != null,
+            enabled = isEnabled,
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
         )
         state.emailError?.let { Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error) }
@@ -51,6 +55,7 @@ fun EmployeeForm(
             onValueChange = { onChange(state.copy(phone = it)) },
             label = { Text("Phone") },
             isError = state.phoneError != null,
+            enabled = isEnabled,
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
         )
         state.phoneError?.let { Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error) }
@@ -59,6 +64,7 @@ fun EmployeeForm(
             value = state.address,
             onValueChange = { onChange(state.copy(address = it)) },
             label = { Text("Address") },
+            enabled = isEnabled,
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
         )
 
@@ -66,6 +72,7 @@ fun EmployeeForm(
             value = state.designation,
             onValueChange = { onChange(state.copy(designation = it)) },
             label = { Text("Designation") },
+            enabled = isEnabled,
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
         )
 
@@ -74,6 +81,7 @@ fun EmployeeForm(
             onValueChange = { onChange(state.copy(salary = it)) },
             label = { Text("Salary*") },
             isError = state.salaryError != null,
+            enabled = isEnabled,
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
         )
         state.salaryError?.let { Text(text = it, color = androidx.compose.material3.MaterialTheme.colorScheme.error) }
@@ -86,12 +94,14 @@ fun EmployeeForm(
         ) {
             Button(
                 onClick = onSave,
+                enabled = isEnabled && !isSaving,
                 modifier = Modifier.weight(1f)
             ) {
                 Text(text = if (isSaving) "Saving..." else "Save")
             }
             Button(
                 onClick = onCancel,
+                enabled = isEnabled && !isSaving,
                 modifier = Modifier.weight(1f)
             ) {
                 Text(text = "Cancel")

@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import com.kaplan.employeehub.ui.components.EmployeeForm
+import com.kaplan.employeehub.ui.components.ErrorDialog
 import com.kaplan.employeehub.ui.viewmodel.EmployeeEditViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -16,6 +17,16 @@ import com.kaplan.employeehub.ui.viewmodel.EmployeeEditViewModel
 fun EmployeeEditScreen(viewModel: EmployeeEditViewModel, employeeId: Long, onSaved: () -> Unit, onDeleted: () -> Unit, onCancel: () -> Unit) {
     val state = viewModel.form.collectAsState()
     val isSaving = viewModel.isSaving.collectAsState()
+    val isLoading = viewModel.isLoading.collectAsState()
+    val errorMessage = viewModel.errorMessage.collectAsState()
+
+    if (errorMessage.value != null) {
+        ErrorDialog(
+            title = "Error",
+            message = errorMessage.value ?: "Unknown error",
+            onDismiss = { viewModel.clearError() }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -37,10 +48,9 @@ fun EmployeeEditScreen(viewModel: EmployeeEditViewModel, employeeId: Long, onSav
             },
             onSave = { viewModel.save(existingId = employeeId, onComplete = onSaved) },
             onCancel = onCancel,
-            isSaving = isSaving.value,
-            modifier = Modifier.padding(padding)
+            isSaving = isSaving.value || isLoading.value,
+            modifier = Modifier.padding(padding),
+            isEnabled = !isLoading.value && !isSaving.value
         )
     }
-
-    // For deletion, we could add a button here in UI. For simplicity, users can edit and save. Deletion is provided via ViewModel.delete if wired to a UI action.
 }

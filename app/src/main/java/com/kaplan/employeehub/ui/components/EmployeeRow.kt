@@ -26,12 +26,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 
 @Composable
-fun EmployeeRow(employee: Employee, onClick: () -> Unit, onDelete: (Employee) -> Unit) {
+fun EmployeeRow(
+    employee: Employee,
+    onClick: () -> Unit,
+    onDelete: (Employee) -> Unit,
+    isDeleting: Boolean = false
+) {
     val cardColor = MaterialTheme.colorScheme.secondaryContainer
     val textColor = MaterialTheme.colorScheme.onSecondaryContainer
 
     Card(
         onClick = onClick,
+        enabled = !isDeleting,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = cardColor),
@@ -74,7 +80,10 @@ fun EmployeeRow(employee: Employee, onClick: () -> Unit, onDelete: (Employee) ->
                     )
                 }
             }
-            IconButton(onClick = { onDelete(employee) }) {
+            IconButton(
+                onClick = { onDelete(employee) },
+                enabled = !isDeleting
+            ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
                     contentDescription = "Delete",

@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import com.kaplan.employeehub.ui.components.EmployeeForm
+import com.kaplan.employeehub.ui.components.ErrorDialog
 import com.kaplan.employeehub.ui.viewmodel.EmployeeEditViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -16,6 +17,16 @@ import com.kaplan.employeehub.ui.viewmodel.EmployeeEditViewModel
 fun EmployeeAddScreen(viewModel: EmployeeEditViewModel, onSaved: () -> Unit, onCancel: () -> Unit) {
     val state = viewModel.form.collectAsState()
     val isSaving = viewModel.isSaving.collectAsState()
+    val isLoading = viewModel.isLoading.collectAsState()
+    val errorMessage = viewModel.errorMessage.collectAsState()
+
+    if (errorMessage.value != null) {
+        ErrorDialog(
+            title = "Error",
+            message = errorMessage.value ?: "Unknown error",
+            onDismiss = { viewModel.clearError() }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -37,8 +48,9 @@ fun EmployeeAddScreen(viewModel: EmployeeEditViewModel, onSaved: () -> Unit, onC
             },
             onSave = { viewModel.save(onComplete = onSaved) },
             onCancel = onCancel,
-            isSaving = isSaving.value,
-            modifier = Modifier.padding(padding)
+            isSaving = isSaving.value || isLoading.value,
+            modifier = Modifier.padding(padding),
+            isEnabled = !isLoading.value && !isSaving.value
         )
     }
 }
