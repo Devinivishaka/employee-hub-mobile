@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -63,19 +64,15 @@ fun EmployeeListScreen(
     if (showDeleteDialog && employeeToDelete != null) {
         AlertDialog(
             onDismissRequest = {
-                showDeleteDialog = false
-                employeeToDelete = null
             },
-            title = { Text("Delete Employee") },
+            title = { Text("Delete ${employeeToDelete?.firstName}") },
             text = {
-                Text("Are you sure you want to delete ${employeeToDelete?.firstName} ${employeeToDelete?.lastName}?")
+                Text("Are you sure you want to delete this employee?")
             },
             confirmButton = {
                 Button(
                     onClick = {
                         employeeToDelete?.let { onDelete(it) }
-                        showDeleteDialog = false
-                        employeeToDelete = null
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error
@@ -87,8 +84,6 @@ fun EmployeeListScreen(
             dismissButton = {
                 Button(
                     onClick = {
-                        showDeleteDialog = false
-                        employeeToDelete = null
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.outlineVariant
@@ -116,48 +111,71 @@ fun EmployeeListScreen(
                 )
             )
         },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddClick,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(Icons.Filled.Add, "Add Employee")
-            }
-        },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
-        if (employees.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "No employees yet.\nTap + to add one.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(employees) { employee ->
-                    EmployeeListItem(
-                        employee = employee,
-                        onClick = { onEmployeeClick(employee) },
-                        onDeleteClick = {
-                            employeeToDelete = employee
-                            showDeleteDialog = true
-                        }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            if (employees.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "No employees yet.\nTap the button below to add one.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(16.dp)
                     )
                 }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentPadding = PaddingValues(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(employees) { employee ->
+                        EmployeeListItem(
+                            employee = employee,
+                            onClick = { onEmployeeClick(employee) },
+                            onEditClick = { onEmployeeClick(employee) },
+                            onDeleteClick = {
+                                employeeToDelete = employee
+                                showDeleteDialog = true
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Full-width Add Employee Button at the bottom
+            Button(
+                onClick = onAddClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = "Add Employee",
+                    modifier = Modifier.padding(end = 8.dp),
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+                Text(
+                    "Add New Employee",
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
             }
         }
     }
@@ -167,12 +185,12 @@ fun EmployeeListScreen(
 fun EmployeeListItem(
     employee: Employee,
     onClick: () -> Unit,
+    onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
             .padding(horizontal = 8.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -226,6 +244,18 @@ fun EmployeeListItem(
                 )
             }
 
+            // Edit Button
+            IconButton(
+                onClick = { onEditClick() }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit Employee",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            // Delete Button
             IconButton(
                 onClick = { onDeleteClick() }
             ) {
