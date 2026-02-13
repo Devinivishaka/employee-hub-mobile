@@ -64,6 +64,8 @@ fun EmployeeListScreen(
     if (showDeleteDialog && employeeToDelete != null) {
         AlertDialog(
             onDismissRequest = {
+                showDeleteDialog = false
+                employeeToDelete = null
             },
             title = { Text("Delete ${employeeToDelete?.firstName}") },
             text = {
@@ -73,6 +75,8 @@ fun EmployeeListScreen(
                 Button(
                     onClick = {
                         employeeToDelete?.let { onDelete(it) }
+                        showDeleteDialog = false
+                        employeeToDelete = null
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error
@@ -84,6 +88,8 @@ fun EmployeeListScreen(
             dismissButton = {
                 Button(
                     onClick = {
+                        showDeleteDialog = false
+                        employeeToDelete = null
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.outlineVariant
